@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Painel — A Galáxia e a Matemática</title>
+
+  <!-- Fonte e CSS principal -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="main.css"/>
+</head>
+<body>
+  <!-- Fundo de estrelas -->
+  <canvas id="stars"></canvas>
+
+  <!-- NAVBAR (mais baixa + animação suave) -->
+  <header class="navbar">
+    <div class="brand" aria-label="Título do site">
+      <span class="brand-top">A GALÁXIA</span>
+      <span class="brand-bottom">A MATEMÁTICA</span>
+    </div>
+
+    <nav class="menu" aria-label="Navegação principal">
+      <a class="active" href="painel.html">Início</a>
+      <a href="ensino.html">Ensino</a>
+      <a href="jogo.html">Jogo</a>
+    </nav>
+
+    <div class="profile">
+      <label for="fotoInput" class="avatar" title="Alterar foto">
+        <img id="fotoPerfil" src="default.png" alt="Foto de perfil"/>
+      </label>
+      <input id="fotoInput" type="file" accept="image/*" hidden />
+      <span id="nomeUsuario">Visitante</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero card fade-up">
+      <h1>Bem-vindo(a) à Galáxia do Conhecimento 🚀</h1>
+      <p>Explore módulos de ensino, desafie-se com jogos e descubra um universo inteiro de matemática.</p>
+      <div class="hero-actions">
+        <a class="btn outline" href="ensino.html">Ir para Ensino</a>
+        <a class="btn gold" href="jogo.html">Abrir Jogos</a>
+      </div>
+    </section>
+
+    <section class="grid-3">
+      <article class="card hover-glow">
+        <h3>Missões</h3>
+        <p>Complete desafios semanais e ganhe medalhas estelares.</p>
+      </article>
+      <article class="card hover-glow">
+        <h3>Progresso</h3>
+        <p>Acompanhe seus pontos e conquistas no painel.</p>
+      </article>
+      <article class="card hover-glow">
+        <h3>Comunidade</h3>
+        <p>Participe de eventos e rankings com sua turma.</p>
+      </article>
+    </section>
+  </main>
+
+  <script src="stars.js"></script>
+  <script>
+    // Nome salvo do login
+    const nome = localStorage.getItem('usuarioLogado') || 'Manuu';
+    document.getElementById('nomeUsuario').textContent = nome;
+
+    // Foto persistente
+    const fotoSalva = localStorage.getItem('fotoPerfil');
+    if (fotoSalva) document.getElementById('fotoPerfil').src = fotoSalva;
+
+    // Upload foto
+    document.getElementById('fotoInput').addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target.result;
+        localStorage.setItem('fotoPerfil', dataUrl);
+        document.getElementById('fotoPerfil').src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>

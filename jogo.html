@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Jogos — A Galáxia e a Matemática</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="main.css"/>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <header class="navbar">
+    <div class="brand">
+      <span class="brand-top">A GALÁXIA</span>
+      <span class="brand-bottom">A MATEMÁTICA</span>
+    </div>
+
+    <nav class="menu">
+      <a href="painel.html">Início</a>
+      <a href="ensino.html">Ensino</a>
+      <a class="active" href="jogo.html">Jogo</a>
+    </nav>
+
+    <div class="profile">
+      <img id="fotoPerfil" class="avatar only" src="default.png" alt="Foto de perfil"/>
+      <span id="nomeUsuario">Visitante</span>
+    </div>
+  </header>
+
+  <main class="container center card fade-up">
+    <h1>Área de Jogos</h1>
+    <p>Em breve: clique para iniciar seu jogo em Pygame diretamente do seu computador.</p>
+    <a class="btn outline" href="#">Baixar/Iniciar (em breve)</a>
+  </main>
+
+  <script src="stars.js"></script>
+  <script>
+    const nome = localStorage.getItem('usuarioLogado') || 'Manuu';
+    document.getElementById('nomeUsuario').textContent = nome;
+
+    const fotoSalva = localStorage.getItem('fotoPerfil');
+    if (fotoSalva) document.getElementById('fotoPerfil').src = fotoSalva;
+  </script>
+</body>
+</html>

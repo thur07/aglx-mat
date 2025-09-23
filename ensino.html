@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Ensino — A Galáxia e a Matemática</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="main.css"/>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <header class="navbar">
+    <div class="brand">
+      <span class="brand-top">A GALÁXIA</span>
+      <span class="brand-bottom">A MATEMÁTICA</span>
+    </div>
+
+    <nav class="menu">
+      <a href="painel.html">Início</a>
+      <a class="active" href="ensino.html">Ensino</a>
+      <a href="jogo.html">Jogo</a>
+    </nav>
+
+    <div class="profile">
+      <img id="fotoPerfil" class="avatar only" src="default.png" alt="Foto de perfil"/>
+      <span id="nomeUsuario">Visitante</span>
+    </div>
+  </header>
+
+  <main class="container teaching">
+    <!-- Player/Aula -->
+    <section class="player card fade-up">
+      <!-- placehold: YouTube embed; substitua o src pelo da aula -->
+      <div class="video-ratio">
+        <iframe src="https://www.youtube.com/embed/2Cqf2G5nK6E"
+                title="Aula de Matemática"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+      </div>
+      <h2>Introdução — Números e Galáxias</h2>
+      <p>Assista à aula e, ao lado, escolha o próximo módulo para continuar sua jornada.</p>
+    </section>
+
+    <!-- Módulos à direita -->
+    <aside class="modules card fade-up delay-1">
+      <h3>Módulos</h3>
+      <ul class="module-list">
+        <li><button class="module-item">1. Sistema Solar dos Números</button></li>
+        <li><button class="module-item">2. Órbitas das Operações</button></li>
+        <li><button class="module-item">3. Constelações da Geometria</button></li>
+        <li><button class="module-item">4. Cometas das Frações</button></li>
+        <li><button class="module-item">5. Buracos Negros e Potências</button></li>
+      </ul>
+      <div class="hint">Clique em um módulo para carregar a próxima aula.</div>
+    </aside>
+  </main>
+
+  <script src="stars.js"></script>
+  <script>
+    // Persistência de nome & foto (mesmo padrão)
+    const nome = localStorage.getItem('usuarioLogado') || 'Manuu';
+    document.getElementById('nomeUsuario').textContent = nome;
+
+    const fotoSalva = localStorage.getItem('fotoPerfil');
+    if (fotoSalva) document.getElementById('fotoPerfil').src = fotoSalva;
+
+    // (Futuro) On click, trocar o src do iframe com a aula selecionada
+    document.querySelectorAll('.module-item').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        // placeholder suave: destaque visual
+        document.querySelectorAll('.module-item').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
