@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galáxia Matemática</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0b001a;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    /* LADO ESQUERDO */
+    .left-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem;
+      background: linear-gradient(135deg, #12002b, #2a004f);
+      clip-path: polygon(0 0, 90% 0, 70% 100%, 0 100%);
+      animation: slideIn 1s ease-out forwards;
+    }
+
+    .left-side h1 {
+      font-size: 3.5rem;
+      color: #ffcc00;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+      margin-bottom: 1rem;
+    }
+
+    .left-side p {
+      font-size: 1.3rem;
+      color: #fff;
+      max-width: 500px;
+      text-align: center;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .cta-button {
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: 3px solid #ffcc00;
+      background: transparent;
+      color: #ffcc00;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .cta-button:hover {
+      background: #ffcc00;
+      color: #000;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #ffcc00;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-50px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* LADO DIREITO */
+    .right-side {
+      flex: 1;
+      position: relative;
+      background: linear-gradient(135deg, #240046, #5a189a);
+      clip-path: polygon(30% 0, 100% 0, 100% 100%, 10% 100%);
+      overflow: hidden;
+    }
+
+    /* Fundo animado de jogos 2D (efeito parallax) */
+    .right-side::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 200%;
+      background: url('https://i.ibb.co/2PhT4yS/space-stars.gif') repeat;
+      background-size: cover;
+      animation: moveBackground 15s linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes moveBackground {
+      from { transform: translate(0, 0); }
+      to { transform: translate(-20%, -20%); }
+    }
+
+    /* RESPONSIVIDADE */
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .left-side, .right-side {
+        clip-path: none;
+        width: 100%;
+      }
+
+      .left-side h1 {
+        font-size: 2.5rem;
+      }
+      .left-side p {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- LADO ESQUERDO -->
+    <div class="left-side">
+      <h1>Bem-vindo à Galáxia Matemática</h1>
+      <p>Descubra um universo onde aprender matemática é uma aventura épica!  
+         Cada desafio é uma missão, cada acerto te leva mais longe.  
+         Venha testar e se divertir enquanto aprende!</p>
+      <button class="cta-button" onclick="window.location.href='jogo.html'">🚀 Testar Jogo</button>
+    </div>
+
+    <!-- LADO DIREITO -->
+    <div class="right-side"></div>
+  </div>
+</body>
+</html>
