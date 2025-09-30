@@ -23,51 +23,51 @@
     }
 
     .container {
-      position: relative;
+      display: flex;
       width: 100%;
       height: 100%;
-      display: flex;
     }
 
-    /* LADO ESQUERDO */
+    /* LADO ESQUERDO (INFO) */
     .left-side {
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: center;
-      padding: 4rem;
-      background: linear-gradient(135deg, #12002b, #2a004f);
-      clip-path: polygon(0 0, 90% 0, 70% 100%, 0 100%);
-      animation: slideIn 1s ease-out forwards;
+      align-items: flex-start;
+      padding: 6rem 5rem;
+      background: linear-gradient(145deg, #16002d, #300060);
+      clip-path: polygon(0 0, 80% 0, 65% 100%, 0 100%);
+      animation: fadeInLeft 1s ease-out forwards;
+      z-index: 2;
     }
 
     .left-side h1 {
-      font-size: 3.5rem;
+      font-size: 4rem;
+      font-weight: 700;
       color: #ffcc00;
-      text-align: center;
-      text-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+      text-shadow: 0 0 25px rgba(255, 204, 0, 0.8);
       margin-bottom: 1rem;
+      line-height: 1.1;
     }
 
     .left-side p {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       color: #fff;
-      max-width: 500px;
-      text-align: center;
+      max-width: 480px;
       line-height: 1.8;
-      margin-bottom: 2rem;
-      opacity: 0.9;
+      margin-bottom: 2.5rem;
+      opacity: 0.95;
     }
 
     .cta-button {
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
+      padding: 1rem 2.5rem;
+      font-size: 1.3rem;
       font-weight: bold;
       border: 3px solid #ffcc00;
       background: transparent;
       color: #ffcc00;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       transition: 0.3s ease;
     }
@@ -75,41 +75,45 @@
     .cta-button:hover {
       background: #ffcc00;
       color: #000;
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #ffcc00;
+      transform: scale(1.07);
+      box-shadow: 0 0 25px #ffcc00;
     }
 
-    @keyframes slideIn {
-      from { transform: translateX(-50px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-50px); }
+      to { opacity: 1; transform: translateX(0); }
     }
 
-    /* LADO DIREITO */
+    /* LADO DIREITO (ANIMAÇÕES) */
     .right-side {
       flex: 1;
       position: relative;
-      background: linear-gradient(135deg, #240046, #5a189a);
-      clip-path: polygon(30% 0, 100% 0, 100% 100%, 10% 100%);
+      background: linear-gradient(145deg, #240046, #5a189a);
+      clip-path: polygon(20% 0, 100% 0, 100% 100%, 35% 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
       overflow: hidden;
+      animation: fadeInRight 1s ease-out forwards;
     }
 
-    /* Fundo animado de jogos 2D (efeito parallax) */
-    .right-side::before {
-      content: "";
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* PARTICULAS */
+    .particle {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 200%;
-      height: 200%;
-      background: url('https://i.ibb.co/2PhT4yS/space-stars.gif') repeat;
-      background-size: cover;
-      animation: moveBackground 15s linear infinite;
-      opacity: 0.8;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.7;
+      animation: moveParticle linear infinite;
     }
 
-    @keyframes moveBackground {
-      from { transform: translate(0, 0); }
-      to { transform: translate(-20%, -20%); }
+    @keyframes moveParticle {
+      from { transform: translateY(-10vh); opacity: 1; }
+      to { transform: translateY(110vh); opacity: 0; }
     }
 
     /* RESPONSIVIDADE */
@@ -121,6 +125,7 @@
       .left-side, .right-side {
         clip-path: none;
         width: 100%;
+        padding: 3rem;
       }
 
       .left-side h1 {
@@ -136,15 +141,34 @@
   <div class="container">
     <!-- LADO ESQUERDO -->
     <div class="left-side">
-      <h1>Bem-vindo à Galáxia Matemática</h1>
-      <p>Descubra um universo onde aprender matemática é uma aventura épica!  
-         Cada desafio é uma missão, cada acerto te leva mais longe.  
-         Venha testar e se divertir enquanto aprende!</p>
-      <button class="cta-button" onclick="window.location.href='jogo.html'">🚀 Testar Jogo</button>
+      <h1>🚀 Galáxia Matemática</h1>
+      <p>Transforme a matemática em uma jornada épica! Cada fase é uma missão, cada acerto te leva mais longe. Aprenda se divertindo em um universo cheio de desafios!</p>
+      <button class="cta-button" onclick="window.location.href='jogo.html'">Testar Agora</button>
     </div>
 
-    <!-- LADO DIREITO -->
-    <div class="right-side"></div>
+    <!-- LADO DIREITO COM PARTÍCULAS -->
+    <div class="right-side" id="particles-container"></div>
   </div>
+
+  <script>
+    // Criar partículas dinamicamente
+    const container = document.getElementById('particles-container');
+    const numParticles = 70; // Mais partículas para deixar vivo!
+
+    for (let i = 0; i < numParticles; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+
+      const size = Math.random() * 5 + 2;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * -100}%`;
+      particle.style.animationDuration = `${Math.random() * 6 + 4}s`;
+
+      container.appendChild(particle);
+    }
+  </script>
 </body>
 </html>

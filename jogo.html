@@ -1,47 +1,735 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Jogos — A Galáxia e a Matemática</title>
+  <!doctype html>
+  <html lang="pt-BR">
+  <head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>A Galáxia Matemática Game — Ultimate</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="main.css"/>
-</head>
-<body>
-  <canvas id="stars"></canvas>
+  <!-- Phaser 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
 
-  <header class="navbar">
-    <div class="brand">
-      <span class="brand-top">A GALÁXIA</span>
-      <span class="brand-bottom">A MATEMÁTICA</span>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#040214;
+      --gold:#ffd76a;
+      --muted:#dcd6cf;
+      --panel: rgba(255,255,255,0.02);
+      --glass: rgba(255,255,255,0.04);
+      --neon: rgba(173, 255, 210, 0.12);
+      --accent: #7ef0ff;
+    }
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--muted); font-family: Poppins, sans-serif; -webkit-font-smoothing:antialiased;}
+    #game-root { position:relative; width:100vw; height:100vh; overflow:hidden; }
+
+    /* Make canvas pixelated */
+    canvas { image-rendering: pixelated; display:block; width:100%; height:100%; }
+
+    /* HUD */
+    .hud {
+      position: absolute; left: 14px; top: 14px; z-index: 9999;
+      display:flex; gap:12px; align-items:center; padding:10px 12px; border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.03); box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    .hud .stat { font-weight:800; color:var(--gold); min-width:84px; text-align:center; }
+    .hud .stat small { display:block; color:#cfc9c2; font-weight:700; font-size:11px; margin-top:4px; }
+
+    .rightbar { position:absolute; right:14px; top:14px; z-index:9999; display:flex; gap:8px; }
+    .btn {
+      background: linear-gradient(180deg, rgba(255,215,90,0.12), rgba(255,215,90,0.04));
+      border: 1px solid rgba(255,215,90,0.08);
+      color: var(--gold);
+      padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.45);
+    }
+
+    .center-instruct {
+      position:absolute; left:50%; bottom:18px; transform:translateX(-50%); z-index:998;
+      background:var(--panel); padding:10px 14px; border-radius:10px; border:1px solid var(--glass);
+      color:#cfc9c2; font-weight:700;
+    }
+
+    /* Start Screen */
+    #startScreen {
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10000;
+      width:min(920px,94vw); background: linear-gradient(180deg, rgba(6,6,8,0.98), rgba(10,8,14,0.99));
+      border-radius:16px; padding:26px; border: 3px solid rgba(255,215,90,0.06); box-shadow: 0 30px 120px rgba(0,0,0,0.7);
+      text-align:center;
+    }
+    #gameTitle { font-family: 'Press Start 2P', monospace; color:var(--gold); font-size:22px; margin-bottom:8px; text-shadow: 0 10px 40px rgba(255,200,80,0.14); }
+    #startScreen p{ color:#cfc9c2; margin:0 0 10px 0; font-size:14px; }
+    .menu-row { display:flex; gap:12px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
+    .big-btn { padding:12px 18px; font-weight:800; border-radius:12px; cursor:pointer; border:0; background:var(--gold); color:#04020a; box-shadow: 0 14px 36px rgba(255,180,70,0.08); }
+
+    /* overlays */
+    .overlay {
+      position:fixed; left:0; top:0; width:100vw; height:100vh; display:none; align-items:center; justify-content:center; z-index:11000;
+      background: linear-gradient(180deg, rgba(2,2,6,0.55), rgba(2,2,6,0.75)); backdrop-filter: blur(4px);
+    }
+    .panel {
+      width:min(780px,92vw); background: linear-gradient(180deg,#07050b,#0b0712); padding:18px; border-radius:12px;
+      border:2px solid rgba(255,215,90,0.06); box-shadow: 0 30px 90px rgba(0,0,0,0.7); color:var(--muted);
+    }
+    .panel h2{ margin:0 0 10px 0; color:var(--gold); font-size:18px; font-weight:800; }
+    .q-row{ display:flex; gap:10px; align-items:center; }
+    .q-input{ flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--muted); font-size:16px; }
+    .feedback { min-width:160px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
+    .shop-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-top:8px; }
+    .shop-card{ padding:10px; border-radius:10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); }
+    .shop-card h3{ margin:0; color:var(--gold); font-size:14px; }
+
+    .note { position:absolute; left:16px; bottom:16px; color:#a9a29e; font-size:12px; z-index:900; }
+
+    @media (max-width:720px){
+      #gameTitle{ font-size:14px; }
+      .hud{ left:8px; top:8px; padding:8px; }
+      .center-instruct{ font-size:12px; padding:8px; }
+    }
+  </style>
+  </head>
+  <body>
+    <div id="game-root"></div>
+
+    <!-- HUD -->
+    <div class="hud" id="hud">
+      <div class="stat">💰 <span id="hudCoins">0</span><small>Moedas</small></div>
+      <div class="stat">❤️ <span id="hudLife">5</span><small>Vida</small></div>
+      <div class="stat">⚡ <span id="hudPower">1</span><small>Força</small></div>
     </div>
 
-    <nav class="menu">
-      <a href="painel.html">Início</a>
-      <a href="ensino.html">Ensino</a>
-      <a class="active" href="jogo.html">Jogo</a>
-    </nav>
-
-    <div class="profile">
-      <img id="fotoPerfil" class="avatar only" src="default.png" alt="Foto de perfil"/>
-      <span id="nomeUsuario">Visitante</span>
+    <div class="rightbar">
+      <button class="btn" id="openShopBtn">LOJA (L)</button>
+      <button class="btn" id="resetBtn">RESET (R)</button>
     </div>
-  </header>
 
-  <main class="container center card fade-up">
-    <h1>Área de Jogos</h1>
-    <p>Em breve: clique para iniciar seu jogo em Pygame diretamente do seu computador.</p>
-    <a class="btn outline" href="#">Baixar/Iniciar (em breve)</a>
-  </main>
+    <div class="center-instruct">A / ← = mover • D / → = mover • W = pular (duplo) • K = atacar • L = loja</div>
 
-  <script src="stars.js"></script>
+    <!-- START MENU -->
+    <div id="startScreen" role="dialog" aria-modal="true">
+      <div id="gameTitle">🌌 A GALÁXIA MATEMÁTICA GAME 🌌</div>
+      <p>Resolva contas enquanto explora a galáxia — ganhe moedas, compre upgrades e evolua seu personagem.</p>
+      <div class="menu-row">
+        <button class="big-btn" id="startBtn">INICIAR</button>
+        <button class="btn" id="howBtn">COMO JOGAR</button>
+        <button class="btn" id="creditsBtn">CRÉDITOS</button>
+      </div>
+      <div style="margin-top:10px;color:#bdb6ae;font-size:13px">Dica: use frações (1/2) ou decimais (0.5) — responda corretamente para ganhar moedas!</div>
+    </div>
+
+    <!-- QUESTION OVERLAY -->
+    <div class="overlay" id="questionOverlay" aria-hidden="true">
+      <div class="panel">
+        <h2>Resolva a conta</h2>
+        <p id="questionText" class="small">Pergunta</p>
+        <div class="q-row">
+          <input id="questionInput" class="q-input" placeholder="Ex: 12 ou 1/2 ou 0.5" />
+          <button class="btn" id="questionConfirm">Confirmar</button>
+          <div class="feedback" id="questionFeedback"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOP OVERLAY -->
+    <div class="overlay" id="shopOverlay" aria-hidden="true">
+      <div class="panel">
+        <h2>Loja Estelar</h2>
+        <p class="small">Compre vidas, power-ups e skins com suas moedas.</p>
+        <div class="shop-grid" id="shopGrid"></div>
+        <div style="text-align:right; margin-top:10px"><button class="btn" id="shopClose">Fechar</button></div>
+      </div>
+    </div>
+
+    <div class="note">Salvo automaticamente em localStorage — progresso: moedas, skin, level.</div>
+
   <script>
-    const nome = localStorage.getItem('usuarioLogado') || 'Manuu';
-    document.getElementById('nomeUsuario').textContent = nome;
+  /* ===================================================================
+    A GALÁXIA MATEMÁTICA GAME — Single-file
+    - Phaser 3 for rendering & physics
+    - DOM/CSS for UI overlays (menu, shop, question)
+    - Procedural pixel sprites via Phaser Canvas textures (no external assets)
+    - LocalStorage save/load
+    - Double-jump, attack, infinite enemies, math modal, shop
+    =================================================================== */
 
-    const fotoSalva = localStorage.getItem('fotoPerfil');
-    if (fotoSalva) document.getElementById('fotoPerfil').src = fotoSalva;
+  /* ---------------- CONFIG ---------------- */
+  const VIRTUAL_WIDTH = 1280;
+  const VIRTUAL_HEIGHT = 720;
+  const MAX_ENEMIES_ON_SCREEN = 8;
+  const MAX_ORBS_ON_SCREEN = 8;
+  const SPAWN_INTERVAL_MS = 900;
+  const SAVE_KEY = 'galaxy_math_save_v1';
+
+  /* ---------------- SAVE/STATE ---------------- */
+  function loadSave(){
+    try{
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return { coins:0, power:1, life:5, level:1, exp:0, expTo:4, skin:'default' };
+      return JSON.parse(raw);
+    }catch(e){ return { coins:0, power:1, life:5, level:1, exp:0, expTo:4, skin:'default' }; }
+  }
+  function saveState(s){
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(s)); }catch(e){ console.warn('save failed', e); }
+  }
+  let GAME_STATE = loadSave();
+
+  function updateHUD(){
+    document.getElementById('hudCoins').textContent = GAME_STATE.coins;
+    document.getElementById('hudLife').textContent = GAME_STATE.life;
+    document.getElementById('hudPower').textContent = Number(GAME_STATE.power).toFixed(1);
+  }
+
+  /* helper functions */
+  function addCoins(n){ GAME_STATE.coins += n; saveState(GAME_STATE); updateHUD(); }
+  function addExp(n){
+    GAME_STATE.exp += n;
+    while(GAME_STATE.exp >= GAME_STATE.expTo){
+      GAME_STATE.exp -= GAME_STATE.expTo;
+      GAME_STATE.level += 1;
+      GAME_STATE.power = Math.round((GAME_STATE.power + 0.6) * 10) / 10;
+      GAME_STATE.expTo = Math.floor(GAME_STATE.expTo * 1.6) + 1;
+    }
+    saveState(GAME_STATE); updateHUD();
+  }
+  function damagePlayer(n){
+    GAME_STATE.life -= n; saveState(GAME_STATE); updateHUD();
+    if(GAME_STATE.life <= 0){
+      setTimeout(()=> {
+        alert('Game Over — reiniciando. Moedas: ' + GAME_STATE.coins);
+        GAME_STATE = { coins:0, power:1, life:5, level:1, exp:0, expTo:4, skin:'default' };
+        saveState(GAME_STATE);
+        updateHUD();
+        location.reload();
+      }, 80);
+    }
+  }
+
+  /* ---------------- TEXTURE GENERATION ---------------- */
+  function createTextures(scene){
+    // Player sheet (48x48 *8)
+    const fw = 48, fh = 48, frames = 8;
+    const playerCanvas = scene.textures.createCanvas('player_sheet', fw*frames, fh);
+    const ctx = playerCanvas.getContext();
+    ctx.imageSmoothingEnabled = false;
+    for(let f=0; f<frames; f++){
+      const ox = f*fw;
+      // background transparent area is left
+      // body
+      ctx.fillStyle = '#2b3a4a'; ctx.fillRect(ox+14,12,20,24);
+      // chest detail (gold alternate)
+      ctx.fillStyle = (f%2? '#b07a2a' : '#ffd76a'); ctx.fillRect(ox+18,18,12,8);
+      // head
+      ctx.fillStyle = '#f4d8bd'; ctx.fillRect(ox+16,4,16,12);
+      // eyes
+      ctx.fillStyle = '#000'; ctx.fillRect(ox+20,7,3,3); ctx.fillRect(ox+29,7,3,3);
+      // legs
+      ctx.fillStyle = '#213041';
+      if(f%3===0){ ctx.fillRect(ox+14,36,7,8); ctx.fillRect(ox+27,36,7,8); }
+      else if(f%3===1){ ctx.fillRect(ox+13,36,8,8); ctx.fillRect(ox+28,36,7,8); }
+      else { ctx.fillRect(ox+15,36,7,8); ctx.fillRect(ox+25,36,7,8); }
+      // arms
+      ctx.fillStyle = '#2b3a4a'; ctx.fillRect(ox+10,18,4,12); ctx.fillRect(ox+34,18,4,12);
+    }
+    playerCanvas.refresh();
+
+    // Alien sheet (40x40 *4)
+    const aw = 40, ah = 40, aframes = 4;
+    const alienCanvas = scene.textures.createCanvas('alien_sheet', aw*aframes, ah);
+    const actx = alienCanvas.getContext();
+    actx.imageSmoothingEnabled = false;
+    for(let f=0; f<aframes; f++){
+      const ox = f*aw;
+      actx.fillStyle = '#7bd389'; actx.beginPath(); actx.ellipse(ox+20,20,16,12,0,0,Math.PI*2); actx.fill();
+      actx.fillStyle = '#041018'; actx.fillRect(ox+17 + (f%2),14,6,6);
+      actx.fillStyle = '#113'; actx.fillRect(ox+17,26 + (f%2),6,2);
+      actx.strokeStyle = '#bff7d8'; actx.lineWidth = 2; actx.beginPath(); actx.moveTo(ox+20,6); actx.lineTo(ox+20,0 + (f%3)); actx.stroke();
+    }
+    alienCanvas.refresh();
+
+    // coin
+    const coin = scene.textures.createCanvas('coin_tex', 20,20);
+    const cctx = coin.getContext(); cctx.imageSmoothingEnabled = false;
+    cctx.fillStyle = '#ffd76a'; cctx.beginPath(); cctx.arc(10,10,8,0,Math.PI*2); cctx.fill();
+    cctx.fillStyle = '#b07a2a'; cctx.fillRect(7,9,6,2);
+    coin.refresh();
+  }
+
+  /* ---------------- MATH QUESTION GENERATOR ---------------- */
+  function generateQuestion(){
+    const types = ['sum','sub','mult','div','frac'];
+    const t = types[Phaser.Math.Between(0, types.length-1)];
+    if(t==='sum'){
+      const n = Phaser.Math.Between(2,4);
+      const nums = Array.from({length:n}, ()=>Phaser.Math.Between(1,50));
+      return {text: nums.join(' + '), ans: nums.reduce((a,b)=>a+b,0)};
+    }
+    if(t==='sub'){
+      const a = Phaser.Math.Between(30,90), b = Phaser.Math.Between(1,20), c = Phaser.Math.Between(1,18);
+      return {text: `${a} - ${b} - ${c}`, ans: a-b-c};
+    }
+    if(t==='mult'){
+      const n = Phaser.Math.Between(2,4);
+      const nums = Array.from({length:n}, ()=>Phaser.Math.Between(2,12));
+      return {text: nums.join(' × '), ans: nums.reduce((a,b)=>a*b,1)};
+    }
+    if(t==='div'){
+      const n = Phaser.Math.Between(2,4);
+      const divisors = Array.from({length:n-1}, ()=>Phaser.Math.Between(2,10));
+      const result = Phaser.Math.Between(1,24);
+      const a = divisors.reduce((acc,d)=>acc*d,result);
+      const arr = [a].concat(divisors);
+      return {text: arr.join(' ÷ '), ans: result};
+    }
+    // fraction op
+    const a = Phaser.Math.Between(1,9), b = Phaser.Math.Between(2,9), c = Phaser.Math.Between(1,9), d = Phaser.Math.Between(2,9);
+    const ops = ['+','-','*','÷']; const op = ops[Phaser.Math.Between(0, ops.length-1)];
+    let res=0;
+    if(op==='+') res = (a*d + c*b)/(b*d);
+    if(op==='-') res = (a*d - c*b)/(b*d);
+    if(op==='*') res = (a*c)/(b*d);
+    if(op==='÷') res = (a*d)/(b*c);
+    res = parseFloat(res.toFixed(3));
+    return {text: `${a}/${b} ${op} ${c}/${d}`, ans: res};
+  }
+
+  function parseAnswer(s){
+    if(!s) return null;
+    s = s.trim().replace(',', '.');
+    if(s.includes('/')){
+      const p = s.split('/');
+      if(p.length === 2){
+        const n = parseFloat(p[0]), d = parseFloat(p[1]);
+        if(!isNaN(n) && !isNaN(d) && d !== 0) return n / d;
+      }
+      return null;
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+
+  function approxEqual(a,b,tol=0.03){ return Math.abs(a-b) <= Math.max(tol, Math.abs(b)*0.02); }
+
+  /* ---------------- PHASER SCENES ---------------- */
+
+  class MenuScene extends Phaser.Scene {
+    constructor(){ super({ key: 'MenuScene' }); }
+    preload(){}
+    create(){
+      // decorative stars (fast)
+      for(let i=0;i<160;i++){
+        const x = Phaser.Math.Between(0, VIRTUAL_WIDTH), y = Phaser.Math.Between(0, VIRTUAL_HEIGHT);
+        const rect = this.add.rectangle(x,y,Phaser.Math.Between(1,3),Phaser.Math.Between(1,3), 0xffffff, Phaser.Math.FloatBetween(0.12,0.9)).setScrollFactor(0);
+        rect.alpha = Phaser.Math.FloatBetween(0.12,0.9);
+      }
+
+      // DOM buttons hooking
+      document.getElementById('startBtn').addEventListener('click', ()=> {
+        document.getElementById('startScreen').style.display = 'none';
+        this.scene.start('GameScene');
+      });
+      document.getElementById('howBtn').addEventListener('click', ()=> {
+        alert('Controles:\nA / ← = esquerda\nD / → = direita\nW = pular (duplo)\nK = atacar\nL = abrir loja\nToque (ou bata) em um inimigo para gerar uma pergunta. Responda no modal.');
+      });
+      document.getElementById('creditsBtn').addEventListener('click', ()=> {
+        alert('Desenvolvido por você + ChatGPT\n2025 — Protótipo educacional');
+      });
+
+      window.addEventListener('keydown', function startEnter(e){
+        if(e.key === 'Enter'){ document.getElementById('startBtn').click(); window.removeEventListener('keydown', startEnter); }
+      });
+    }
+  }
+
+  class GameScene extends Phaser.Scene {
+    constructor(){ super({ key: 'GameScene' }); }
+    preload(){}
+    create(){
+      createTextures(this);
+
+      // world bounds huge (infinite logic uses camera)
+      this.cameras.main.setBounds(0,0,100000,VIRTUAL_HEIGHT);
+      this.physics.world.setBounds(0,0,100000,VIRTUAL_HEIGHT);
+
+      // background: draw moving planets using containers (lightweight)
+      this.bgContainer = this.add.container(0,0);
+      // create some star layers as simple sprites (rects)
+      this.stars = [];
+      for(let i=0;i<120;i++){
+        const s = this.add.rectangle(Phaser.Math.Between(0,VIRTUAL_WIDTH), Phaser.Math.Between(0,VIRTUAL_HEIGHT), Phaser.Math.Between(1,3), Phaser.Math.Between(1,3), 0xffffff).setScrollFactor(0);
+        s.alpha = Phaser.Math.FloatBetween(0.1,0.9);
+        this.stars.push(s);
+      }
+      // create planets (graphics)
+      this.planets = [];
+      for(let i=0;i<6;i++){
+        const px = Phaser.Math.Between(200, VIRTUAL_WIDTH-200);
+        const py = Phaser.Math.Between(60, VIRTUAL_HEIGHT/2);
+        const g = this.add.graphics().setScrollFactor(0);
+        const r = Phaser.Math.Between(28,84);
+        const col = Phaser.Display.Color.HSLToColor(Math.random(), 0.6, 0.5).color;
+        g.fillStyle(col, 1); g.fillCircle(px, py, r);
+        g.alpha = 0.12 + Math.random()*0.25;
+        this.planets.push({g, px, py, r, speed: 0.02 + Math.random()*0.06});
+      }
+
+      // Platforms group
+      this.platforms = this.physics.add.staticGroup();
+      const floor = this.add.rectangle(0, VIRTUAL_HEIGHT-48, 200000, 96, 0x16202a).setOrigin(0,0);
+      this.physics.add.existing(floor, true);
+      this.platforms.add(floor);
+
+      // some floating platforms
+      for(let i=0;i<80;i++){
+        const px = 300 + i * 1200 + Phaser.Math.Between(-120,120);
+        const py = Phaser.Math.Between(220, VIRTUAL_HEIGHT - 220);
+        const r = this.add.rectangle(px, py, Phaser.Math.Between(140,260), 18, 0x16202a).setOrigin(0,0);
+        this.physics.add.existing(r, true);
+        this.platforms.add(r);
+      }
+
+      // Player
+      this.player = this.physics.add.sprite(180, VIRTUAL_HEIGHT - 200, 'player_sheet').setScale(1.8);
+      this.player.setCollideWorldBounds(true);
+      this.player.body.setSize(22,38).setOffset(12,6);
+      this.player.setDepth(30);
+      this.player.jumpCount = 0;
+      this.player.facing = 1;
+
+      // Animations
+      this.anims.create({ key:'idle', frames: this.anims.generateFrameNumbers('player_sheet', { start:0, end:3 }), frameRate:6, repeat:-1 });
+      this.anims.create({ key:'run', frames: this.anims.generateFrameNumbers('player_sheet', { start:4, end:7 }), frameRate:12, repeat:-1 });
+      this.anims.create({ key:'attack', frames: [ { key:'player_sheet', frame:7 } ], frameRate:1 });
+
+      // Enemy/orb groups
+      this.enemies = this.physics.add.group();
+      this.orbs = this.physics.add.group();
+
+      // collisions
+      this.physics.add.collider(this.player, this.platforms);
+      this.physics.add.collider(this.enemies, this.platforms);
+      this.physics.add.collider(this.orbs, this.platforms);
+
+      // overlaps trigger math modal
+      this.physics.add.overlap(this.player, this.enemies, (p,e) => {
+        if(e.getData('handled')) return;
+        e.setData('handled', true);
+        this.physics.pause();
+        this.player.setTint(0x999999);
+        const q = generateQuestion();
+        openQuestionModal(q, { type:'enemy', sprite: e, scene: this });
+      });
+
+      this.physics.add.overlap(this.player, this.orbs, (p,o) => {
+        if(o.getData('handled')) return;
+        o.setData('handled', true);
+        this.physics.pause();
+        this.player.setTint(0x999999);
+        const q = generateQuestion();
+        openQuestionModal(q, { type:'orb', sprite: o, scene: this });
+      });
+
+      this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+      this.cameras.main.setZoom(1);
+
+      // Input
+      this.keys = this.input.keyboard.addKeys({ left:'A', right:'D', up:'W', attack:'K', shop:'L' });
+      this.input.keyboard.addKey('LEFT'); this.input.keyboard.addKey('RIGHT'); this.input.keyboard.addKey('UP');
+
+      // spawn timer keeps infinite world feeling
+      this.spawnTimer = this.time.addEvent({ delay: SPAWN_INTERVAL_MS, loop:true, callback: () => {
+        const camX = this.cameras.main.scrollX;
+        const spawnX = camX + VIRTUAL_WIDTH + Phaser.Math.Between(200, 900);
+        if(this.orbs.getLength() < MAX_ORBS_ON_SCREEN && Phaser.Math.Between(0,100) < 60) this.spawnOrb(spawnX, Phaser.Math.Between(160, VIRTUAL_HEIGHT - 240));
+        if(this.enemies.getLength() < MAX_ENEMIES_ON_SCREEN && Phaser.Math.Between(0,100) < 55) this.spawnEnemy(spawnX);
+      }});
+
+      // initial spawns
+      for(let i=0;i<6;i++){ this.spawnOrb(600 + i*520, Phaser.Math.Between(160, VIRTUAL_HEIGHT - 200)); if(i%2===0) this.spawnEnemy(700 + i*820); }
+
+      // DOM bindings
+      document.getElementById('openShopBtn').addEventListener('click', ()=> openShop(this));
+      document.getElementById('shopClose').addEventListener('click', ()=> document.getElementById('shopOverlay').style.display = 'none');
+      document.getElementById('resetBtn').addEventListener('click', ()=> {
+        this.enemies.clear(true, true);
+        this.orbs.clear(true, true);
+        this.player.x = 180; this.player.y = VIRTUAL_HEIGHT - 200;
+        GAME_STATE = { coins:0, power:1, life:5, level:1, exp:0, expTo:4, skin: GAME_STATE.skin || 'default' };
+        saveState(GAME_STATE); updateHUD();
+        document.getElementById('shopOverlay').style.display = 'none';
+        document.getElementById('questionOverlay').style.display = 'none';
+        this.physics.resume();
+        this.player.clearTint();
+      });
+
+      this.lastAttackTime = 0;
+      window._GAME_SCENE = this;
+    }
+
+    update(time, delta){
+      const dt = delta/1000;
+      // animate background stars/planets (parallax)
+      this.stars.forEach((s, i)=> {
+        s.x -= 0.02 * (1 + (i%3));
+        if(s.x < this.cameras.main.scrollX - 50) s.x = this.cameras.main.scrollX + VIRTUAL_WIDTH + Phaser.Math.Between(0,100);
+      });
+      this.planets.forEach(p=>{
+        p.g.x = p.g.x - p.speed;
+        if(p.g.x < this.cameras.main.scrollX - 200) p.g.x = this.cameras.main.scrollX + VIRTUAL_WIDTH + Phaser.Math.Between(100,400);
+      });
+
+      const left = this.keys.left.isDown || this.input.keyboard.checkDown(this.input.keyboard.addKey('LEFT'), 10);
+      const right = this.keys.right.isDown || this.input.keyboard.checkDown(this.input.keyboard.addKey('RIGHT'), 10);
+      const upPressed = Phaser.Input.Keyboard.JustDown(this.keys.up) || Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey('UP'));
+
+      // horizontal movement
+      const max = 320, accel = 1600;
+      if(left){ this.player.body.velocity.x = Phaser.Math.Clamp(this.player.body.velocity.x - accel * dt, -max, max); this.player.facing = -1; }
+      else if(right){ this.player.body.velocity.x = Phaser.Math.Clamp(this.player.body.velocity.x + accel * dt, -max, max); this.player.facing = 1; }
+      else { this.player.body.velocity.x *= Math.pow(0.0001, dt); if(Math.abs(this.player.body.velocity.x) < 8) this.player.body.velocity.x = 0; }
+
+      // jump / double jump
+      if(upPressed){
+        if(this.player.body.blocked.down || this.player.body.onFloor()){
+          this.player.body.velocity.y = -640;
+          this.player.jumpCount = 1;
+          playSound('jump');
+        } else if(this.player.jumpCount < 2){
+          this.player.body.velocity.y = -560;
+          this.player.jumpCount++;
+          playSound('jump2');
+        }
+      }
+      if(this.player.body.onFloor()) this.player.jumpCount = 0;
+
+      // attack
+      if(Phaser.Input.Keyboard.JustDown(this.keys.attack) && time > this.lastAttackTime + 180){
+        this.lastAttackTime = time;
+        this.player.play('attack', true);
+        playSound('attack');
+        const hits = this.enemies.getChildren().filter(e => {
+          const dx = e.x - this.player.x;
+          return (this.player.facing === 1 && dx > 0 && dx < 90) || (this.player.facing === -1 && dx < 0 && dx > -90);
+        });
+        hits.forEach(e=>{
+          e.setTint(0xffb86b);
+          this.time.delayedCall(120, ()=> e.clearTint());
+          e.hp -= Math.max(1, Math.floor(GAME_STATE.power));
+          for(let i=0;i<6;i++){
+            const cx = this.add.circle(e.x + Phaser.Math.Between(-6,6), e.y + Phaser.Math.Between(-6,6), 1.6, 0xffd76a).setDepth(50);
+            this.tweens.add({ targets: cx, y: cx.y + Phaser.Math.Between(20,80), alpha: { from:1, to:0 }, duration: 600, onComplete: ()=> cx.destroy() });
+          }
+          if(e.hp <= 0){
+            for(let k=0;k<3;k++) spawnCoinParticle(this, e.x + Phaser.Math.Between(-6,6), e.y + Phaser.Math.Between(-10,-2));
+            e.destroy();
+            addCoins(6 + GAME_STATE.level*2);
+            addExp(1);
+            playSound('coin');
+          }
+        });
+      }
+
+      // enemy cleanup & movement
+      this.enemies.getChildren().forEach(e=>{
+        if(!e.body) return;
+        if(Math.abs(e.body.velocity.x) < 1) e.setVelocityX( - (60 + Phaser.Math.Between(0,80)) );
+        const camX = this.cameras.main.scrollX;
+        if(e.x < camX - 400) e.destroy();
+      });
+
+      // orbs drift cleanup
+      this.orbs.getChildren().forEach(o => {
+        o.x += (o.vx || -40) * dt;
+        const camX = this.cameras.main.scrollX;
+        if(o.x < camX - 400) o.destroy();
+      });
+
+      // animations
+      if(!this.player.body.onFloor()){
+        // keep last frame, could add jump anim
+      } else if(Math.abs(this.player.body.velocity.x) > 20){
+        this.player.play('run', true);
+      } else {
+        if(this.player.anims.currentAnim && this.player.anims.currentAnim.key !== 'attack') this.player.play('idle', true);
+      }
+
+      if(time % 600 < 20) updateHUD();
+    }
+
+    spawnEnemy(x){
+      const y = VIRTUAL_HEIGHT - 48 - 18;
+      const e = this.enemies.create(x, y, 'alien_sheet').setScale(1.1);
+      e.body.setSize(24,28).setOffset(8,8);
+      e.hp = 3 + Math.floor(GAME_STATE.level/2);
+      e.setDepth(18);
+      return e;
+    }
+
+    spawnOrb(x,y){
+      const o = this.orbs.create(x, y, 'coin_tex').setScale(1.2);
+      o.vx = -60 - Phaser.Math.Between(0,40);
+      o.setDepth(18);
+      return o;
+    }
+  }
+
+  /* ---------------- QUESTION MODAL ---------------- */
+  const questionOverlay = document.getElementById('questionOverlay');
+  const questionText = document.getElementById('questionText');
+  const questionInput = document.getElementById('questionInput');
+  const questionConfirm = document.getElementById('questionConfirm');
+  const questionFeedback = document.getElementById('questionFeedback');
+
+  let activeQuestion = null;
+  let activeSource = null; // { type:'enemy'|'orb', sprite: Phaser sprite, scene }
+
+  function openQuestionModal(q, source){
+    activeQuestion = q; activeSource = source;
+    questionText.textContent = 'Resolva: ' + q.text;
+    questionInput.value = '';
+    questionFeedback.textContent = '';
+    questionOverlay.style.display = 'flex';
+    questionInput.focus();
+    playSound('modal');
+  }
+
+  function closeQuestionModal(resume=true){
+    questionOverlay.style.display = 'none';
+    activeQuestion = null; activeSource = null;
+    if(resume && window._GAME_SCENE){
+      window._GAME_SCENE.physics.resume();
+      window._GAME_SCENE.player.clearTint();
+    }
+  }
+
+  questionConfirm.addEventListener('click', () => {
+    if(!activeQuestion || !activeSource) return;
+    const val = parseAnswer(questionInput.value);
+    if(val === null){ questionFeedback.textContent = 'Entrada inválida'; questionFeedback.style.color = 'tomato'; playSound('error'); return; }
+    if(approxEqual(val, activeQuestion.ans, 0.03)){
+      questionFeedback.textContent = '✔ Acertou!';
+      questionFeedback.style.color = 'lime';
+      addCoins(12 + GAME_STATE.level*2);
+      addExp(1);
+      if(activeSource.type === 'orb' && activeSource.sprite) activeSource.sprite.destroy();
+      else if(activeSource.type === 'enemy' && activeSource.sprite){
+        spawnCoinParticle(window._GAME_SCENE, activeSource.sprite.x, activeSource.sprite.y);
+        activeSource.sprite.destroy();
+        addCoins(10 + GAME_STATE.level*2);
+      }
+      playSound('coin');
+      setTimeout(()=> closeQuestionModal(true), 360);
+    } else {
+      questionFeedback.textContent = '✘ Errado — resposta: ' + String(activeQuestion.ans);
+      questionFeedback.style.color = 'tomato';
+      damagePlayer(1);
+      playSound('error');
+      setTimeout(()=> closeQuestionModal(true), 700);
+    }
+  });
+  questionInput.addEventListener('keydown', (e)=> { if(e.key === 'Enter') questionConfirm.click(); });
+
+  /* ---------------- SHOP ---------------- */
+  const shopOverlay = document.getElementById('shopOverlay');
+  const shopGrid = document.getElementById('shopGrid');
+  const shopBtn = document.getElementById('openShopBtn');
+  const shopClose = document.getElementById('shopClose');
+
+  const SHOP_ITEMS = [
+    { id:'life', title:'+1 Vida', desc:'Cura 1 (máx 8)', cost:40, apply:()=> { GAME_STATE.life = Math.min(8, GAME_STATE.life + 1); } },
+    { id:'power', title:'+0.6 Força', desc:'+0.6 Força', cost:100, apply:()=> { GAME_STATE.power = Math.round((GAME_STATE.power + 0.6)*10)/10; } },
+    { id:'goldskin', title:'Skin Dourada', desc:'Skin cosmética dourada', cost:220, apply:()=> { GAME_STATE.skin = 'gold'; } },
+    { id:'coinpack', title:'+50 Moedas', desc:'Pacote de moedas', cost:180, apply:()=> { GAME_STATE.coins += 50; } }
+  ];
+
+  function buildShop(){
+    shopGrid.innerHTML = '';
+    SHOP_ITEMS.forEach(it=>{
+      const card = document.createElement('div'); card.className = 'shop-card';
+      card.innerHTML = `<div style="display:flex;justify-content:space-between"><strong style="color:var(--gold)">${it.title}</strong><strong>${it.cost}💰</strong></div><div style="margin-top:6px;color:#cfc9c2;font-size:13px">${it.desc}</div><div style="text-align:right;margin-top:8px"><button class="btn buy">Comprar</button></div>`;
+      shopGrid.appendChild(card);
+      card.querySelector('.buy').addEventListener('click', ()=>{
+        if(GAME_STATE.coins >= it.cost){
+          GAME_STATE.coins -= it.cost; it.apply(); saveState(GAME_STATE); updateHUD(); alert('Compra: ' + it.title);
+        } else alert('Moedas insuficientes');
+      });
+    });
+  }
+
+  function openShop(scene){
+    buildShop();
+    shopOverlay.style.display = 'flex';
+    playSound('modal');
+  }
+
+  shopBtn.addEventListener('click', ()=> openShop(window._GAME_SCENE));
+  shopClose.addEventListener('click', ()=> shopOverlay.style.display = 'none');
+
+  /* ---------------- PARTICLES & COIN FX ---------------- */
+  function spawnCoinParticle(scene, x, y){
+    // small sprite using coin_tex
+    if(!scene) return;
+    const img = scene.add.image(x, y, 'coin_tex').setScale(0.7).setDepth(50);
+    scene.tweens.add({ targets: img, y: y-70, alpha: { from: 1, to: 0 }, duration: 900, onComplete: ()=> img.destroy() });
+  }
+
+  /* ---------------- SOUNDS (WebAudio simple) ---------------- */
+  const audioCtx = (typeof AudioContext !== 'undefined') ? new AudioContext() : null;
+  function playTone(freq, time=0.06, type='sine', vol=0.07){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = vol;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + time);
+    setTimeout(()=> { try{ o.stop(); }catch(e){} }, time*1000 + 20);
+  }
+  function playSound(name){
+    if(!audioCtx) return;
+    // resume context on first interaction
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    switch(name){
+      case 'jump': playTone(420,0.08,'sine',0.06); break;
+      case 'jump2': playTone(520,0.09,'triangle',0.06); break;
+      case 'attack': playTone(240,0.06,'square',0.06); break;
+      case 'coin': playTone(880,0.12,'sine',0.08); break;
+      case 'error': playTone(160,0.16,'sawtooth',0.09); break;
+      case 'modal': playTone(520,0.14,'sine',0.04); break;
+      default: playTone(440,0.06,'sine',0.04);
+    }
+  }
+
+  /* ---------------- INIT GAME ---------------- */
+  updateHUD();
+
+  const phaserConfig = {
+    type: Phaser.AUTO,
+    parent: 'game-root',
+    width: VIRTUAL_WIDTH,
+    height: VIRTUAL_HEIGHT,
+    backgroundColor: '#040214',
+    physics: { default: 'arcade', arcade: { gravity: { y: 1000 }, debug: false } },
+    scene: [MenuScene, GameScene]
+  };
+  const game = new Phaser.Game(phaserConfig);
+
+  /* Resume audio on first click to satisfy autoplay policies */
+  window.addEventListener('click', ()=> { if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once:true });
+
+  /* keyboard for opening shop (L) while playing */
+  window.addEventListener('keydown', (e)=>{
+    if(e.key.toLowerCase() === 'l'){ openShop(window._GAME_SCENE); }
+    if(e.key.toLowerCase() === 'r'){ location.reload(); }
+  });
+
+  /* Save application state when page unloads */
+  window.addEventListener('beforeunload', ()=> { saveState(GAME_STATE); });
+
+  /* initial UI hook: hide start screen on load if we want auto start? keep shown */
   </script>
-</body>
-</html>
+  </body>
+  </html>
